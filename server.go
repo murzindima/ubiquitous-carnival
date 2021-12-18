@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -153,6 +154,23 @@ func main() {
 		initLog()
 		http.HandleFunc("/user", simpleUserHandler)
 	}
+
+	err := sentry.Init(sentry.ClientOptions{
+		Dsn: "https://5a0ae5f9fbc84e2e9365c4b793dca1c1@o1081816.ingest.sentry.io/6089733",
+	})
+	if err != nil {
+		log.Fatalf("sentry.Init: %s", err)
+	}
+
+	sentry.ConfigureScope(func(scope *sentry.Scope) {
+		scope.SetUser(sentry.User{Email: "jane.doe@example.com"})
+	})
+	sentry.Init(sentry.ClientOptions{
+		Release: "my-project-name@1.0.0",
+	})
+	// Flush buffered events before the program terminates.
+	defer sentry.Flush(2 * time.Second)
+	sentry.CaptureMessage("It works!")
 
 	http.HandleFunc("/hello", helloHandler)
 	http.Handle("/metrics", promhttp.Handler())
