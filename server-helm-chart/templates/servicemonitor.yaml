@@ -1,0 +1,19 @@
+{{- if .Values.servicemonitor.enabled -}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  annotations:
+  labels:
+    release: prometheus-operator
+  name: {{ include "server-helm-chart.fullname" . }}
+  namespace: monitoring
+spec:
+  endpoints:
+  - interval: 5s
+    port: http
+  namespaceSelector:
+    any: true
+  selector:
+    matchLabels:
+    {{- include "server-helm-chart.selectorLabels" . | nindent 6 }}
+{{- end }}
